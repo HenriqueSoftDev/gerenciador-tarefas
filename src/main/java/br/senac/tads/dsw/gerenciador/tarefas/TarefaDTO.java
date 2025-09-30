@@ -1,5 +1,6 @@
 package br.senac.tads.dsw.gerenciador.tarefas;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +19,7 @@ public class TarefaDTO {
     private String responsavel;
 
     @NotNull
-    @FutureOrPresent(message = "A data de término deve ser hoje ou uma data futura.")
+    @FutureOrPresent
     private LocalDate dataTermino;
 
     @Size(max = 200)
@@ -64,5 +65,10 @@ public class TarefaDTO {
 
     public void setDetails(@Size(max = 200) String details) {
         this.details = details;
+    }
+
+    @JsonProperty("atrasada")
+    public boolean isAtrasada() {
+        return dataTermino.isBefore(LocalDate.now());
     }
 }

@@ -18,7 +18,7 @@ public class TarefaDTO {
     private String responsavel;
 
     @NotNull
-    @FutureOrPresent
+    @FutureOrPresent(message = "A data de término deve ser hoje ou uma data futura.")
     private LocalDate dataTermino;
 
     @Size(max = 200)

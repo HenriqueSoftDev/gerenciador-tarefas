@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-@CrossOrigin(origins = "http://localhost:5500")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/tarefas")
 public class TarefaRestController {

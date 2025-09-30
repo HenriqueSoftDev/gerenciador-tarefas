@@ -2,19 +2,75 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <title>Lista de Tarefas</title>
+    <title>Lista e Criação de Tarefas</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background-color: #f2f2f2; }
-        caption { font-size: 1.5em; margin-bottom: 10px; }
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          max-width: 900px;
+          margin: auto;
+        }
+
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-bottom: 30px;
+        }
+
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+        }
+
+        th {
+          background-color: #f2f2f2;
+        }
+
+        caption {
+          font-size: 1.5em;
+          margin-bottom: 10px;
+          font-weight: bold;
+        }
+
+        form > div {
+          margin-bottom: 12px;
+        }
+
+        label {
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        input[type="text"], input[type="date"], textarea {
+          width: 100%;
+          padding: 6px;
+          box-sizing: border-box;
+        }
+
+        button {
+          padding: 10px 16px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+
+        .btn-submit {
+          background-color: #28a745;
+          color: white;
+          border: none;
+        }
+
+        .btn-reset {
+          background-color: #6c757d;
+          color: white;
+          border: none;
+          margin-left: 10px;
+        }
     </style>
 </head>
 <body>
+
 <h1>Lista de Tarefas</h1>
 <table id="tarefasTable">
-    <caption>Tarefas Atuais</caption>
     <thead>
     <tr>
         <th>Título</th>
@@ -24,51 +80,93 @@
     </tr>
     </thead>
     <tbody>
-    <!-- Conteúdo inserido via JS -->
     </tbody>
 </table>
 
+<h2>Criar Nova Tarefa</h2>
+<form id="formTarefa">
+    <div>
+        <label for="txtTitle">Título</label>
+        <input type="text" id="txtTitle" name="title" placeholder="Título da tarefa" minlength="3" maxlength="100" required />
+    </div>
+    <div>
+        <label for="txtResponsavel">Responsável</label>
+        <input type="text" id="txtResponsavel" name="responsavel" placeholder="Nome do responsável" minlength="1" maxlength="64" required />
+    </div>
+    <div>
+        <label for="txtDataTermino">Data de Término</label>
+        <input type="date" id="txtDataTermino" name="dataTermino" required />
+    </div>
+    <div>
+        <label for="txtDetails">Detalhes</label>
+        <textarea id="txtDetails" name="details" maxlength="200" rows="3" placeholder="Detalhes adicionais (opcional)"></textarea>
+    </div>
+    <button type="submit" class="btn-submit">Salvar</button>
+    <button type="reset" class="btn-reset">Limpar</button>
+</form>
+
 <script>
+    const tarefasTableBody = document.querySelector('#tarefasTable tbody');
+    const form = document.getElementById('formTarefa');
+
     async function carregarTarefas() {
-        try {
-            const response = await fetch('/tarefas');
-            if (!response.ok) {
-                throw new Error('Erro ao buscar tarefas: ' + response.statusText);
-            }
-            const tarefas = await response.json();
+      try {
+        const response = await fetch('http://localhost:8080/tarefas');
+        if (!response.ok) throw new Error('Erro ao buscar tarefas: ' + response.statusText);
 
-            const tbody = document.querySelector('#tarefasTable tbody');
-            tbody.innerHTML = ''; // limpa conteúdo
+        const tarefas = await response.json();
 
-            tarefas.forEach(tarefa => {
-                const tr = document.createElement('tr');
+        tarefasTableBody.innerHTML = '';
 
-                const tdTitle = document.createElement('td');
-                tdTitle.textContent = tarefa.title;
-                tr.appendChild(tdTitle);
+        tarefas.forEach(tarefa => {
+          const tr = document.createElement('tr');
 
-                const tdResponsavel = document.createElement('td');
-                tdResponsavel.textContent = tarefa.responsavel;
-                tr.appendChild(tdResponsavel);
+          tr.innerHTML = `
+            <td>${tarefa.title}</td>
+            <td>${tarefa.responsavel}</td>
+            <td>${new Date(tarefa.dataTermino).toLocaleDateString('pt-BR')}</td>
+            <td>${tarefa.details || ''}</td>
+          `;
 
-                const tdDataTermino = document.createElement('td');
-                // Formata a data para dd/mm/yyyy
-                const data = new Date(tarefa.dataTermino);
-                tdDataTermino.textContent = data.toLocaleDateString('pt-BR');
-                tr.appendChild(tdDataTermino);
-
-                const tdDetails = document.createElement('td');
-                tdDetails.textContent = tarefa.details || '';
-                tr.appendChild(tdDetails);
-
-                tbody.appendChild(tr);
-            });
-        } catch (error) {
-            alert('Erro ao carregar tarefas: ' + error.message);
-        }
+          tarefasTableBody.appendChild(tr);
+        });
+      } catch (error) {
+        alert(error.message);
+      }
     }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+
+      const tarefa = {
+        title: form.title.value.trim(),
+        responsavel: form.responsavel.value.trim(),
+        dataTermino: form.dataTermino.value,
+        details: form.details.value.trim() || null
+      };
+
+      try {
+        const response = await fetch('http://localhost:8080/tarefas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tarefa)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error('Erro ao salvar: ' + errorText);
+        }
+
+        alert('Tarefa criada com sucesso!');
+        form.reset();
+        carregarTarefas();
+      } catch (error) {
+        alert('Falha ao salvar a tarefa: ' + error.message);
+      }
+    });
 
     window.onload = carregarTarefas;
 </script>
+
 </body>
 </html>

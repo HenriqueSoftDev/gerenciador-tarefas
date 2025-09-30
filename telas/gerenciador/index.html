@@ -1,10 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8" />
+    <title>Lista de Tarefas</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        caption { font-size: 1.5em; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
+<h1>Lista de Tarefas</h1>
+<table id="tarefasTable">
+    <caption>Tarefas Atuais</caption>
+    <thead>
+    <tr>
+        <th>Título</th>
+        <th>Responsável</th>
+        <th>Data Término</th>
+        <th>Detalhes</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Conteúdo inserido via JS -->
+    </tbody>
+</table>
 
+<script>
+    async function carregarTarefas() {
+        try {
+            const response = await fetch('/tarefas');
+            if (!response.ok) {
+                throw new Error('Erro ao buscar tarefas: ' + response.statusText);
+            }
+            const tarefas = await response.json();
+
+            const tbody = document.querySelector('#tarefasTable tbody');
+            tbody.innerHTML = ''; // limpa conteúdo
+
+            tarefas.forEach(tarefa => {
+                const tr = document.createElement('tr');
+
+                const tdTitle = document.createElement('td');
+                tdTitle.textContent = tarefa.title;
+                tr.appendChild(tdTitle);
+
+                const tdResponsavel = document.createElement('td');
+                tdResponsavel.textContent = tarefa.responsavel;
+                tr.appendChild(tdResponsavel);
+
+                const tdDataTermino = document.createElement('td');
+                // Formata a data para dd/mm/yyyy
+                const data = new Date(tarefa.dataTermino);
+                tdDataTermino.textContent = data.toLocaleDateString('pt-BR');
+                tr.appendChild(tdDataTermino);
+
+                const tdDetails = document.createElement('td');
+                tdDetails.textContent = tarefa.details || '';
+                tr.appendChild(tdDetails);
+
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            alert('Erro ao carregar tarefas: ' + error.message);
+        }
+    }
+
+    window.onload = carregarTarefas;
+</script>
 </body>
 </html>
